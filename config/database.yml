@@ -23,7 +23,8 @@ default: &default
 
 development:
   <<: *default
-  database: demo_development
+  database: demo_url_shortener_development
+  username: adminitx
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
@@ -57,7 +58,8 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: demo_test
+  database: demo_url_shortener_test
+  username: adminitx
 
 # As with config/secrets.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -80,6 +82,6 @@ test:
 #
 production:
   <<: *default
-  database: demo_production
+  database: demo_url_shortener_production
   username: demo
   password: <%= ENV['DEMO_DATABASE_PASSWORD'] %>
