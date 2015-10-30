@@ -2,10 +2,10 @@ require 'database_cleaner'
 require "rails_helper"
 
 describe ShortLink, :type => :model do
-  subject { FactoryGirl.build(:short_link) }
+  # subject {  }
   
   it "has a valid factory" do
-    expect(subject).to be_valid
+    expect(build(:short_link)).to be_valid
   end
 
   describe "#create" do
@@ -13,24 +13,24 @@ describe ShortLink, :type => :model do
       expect(subject.class.to_s).to eq "ShortLink"
     end
 
-    it "requires a long_link_id" do
-      expect(FactoryGirl.build(:short_link, :long_link_id => nil)).to be_invalid
+    it "requires a valid long_link_id" do
+      expect(build(:short_link, :long_link_id => 30000)).to be_invalid
     end
 
-    it "requires a related LongLink record" do
-      @long_link = FactoryGirl.create(:long_link)
-      expect(FactoryGirl.create(:short_link, :long_link_id => @long_link.id)).to be_valid
+    it "generates slug is if nil or invalid" do
+      expect(build(:short_link, :slug => nil)).to be_valid
     end
+   
+  end
 
-    it "slug is required" do
-      expect(FactoryGirl.build(:short_link, :slug => nil)).to be_invalid
-    end
+  describe "#validate_by_slug_suffix" do
+    subject { build(:short_link) }
 
-    it "length must be equal to LENGTH" do
-      subject { FactoryGirl.build(:short_link) }
-      subject.slug = "A" * ShortLink::LENGTH
-      
-      expect(subject).to be_valid
+    it 'validates against last character' do
+      subject.slug = 'aaaaaa'
+      expect(subject.validate_by_slug_suffix).to eq true
+      subject.slug = 'aaaaab'
+      expect(subject.validate_by_slug_suffix).not_to eq true
     end
    
   end
