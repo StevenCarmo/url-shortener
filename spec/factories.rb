@@ -5,8 +5,8 @@ FactoryGirl.define do
   end
 
   factory :short_link do
-    slug                   "AAAAAA"
     long_link
+    slug                   "AAAAAA"
   end
 
 end
