@@ -8,6 +8,9 @@ class LongLink < ActiveRecord::Base
     uniqueness: {case_sensitive: true , message: "Url is not unique"},
     if: :continue_validation?
 
+  # after_create :create_short_link
+  before_destroy :destroy_short_links
+
   def must_be_valid_url
     errors.add(:base, 'Url is invalid') unless valid_url?
   end
@@ -16,6 +19,22 @@ class LongLink < ActiveRecord::Base
     # TODO tighten validation
     url = URI.parse(self.url) rescue false
     return url.kind_of?(URI::HTTP) || url.kind_of?(URI::HTTPS)   
+  end
+
+  def self.find_or_create_by_url(url)
+    return self.find_by_url(url) || self.create({url: url})
+  end
+
+  def short_link
+    ShortLink.find_by_long_link_id(id)
+  end
+
+  # def create_short_link
+  #   ShortLink.create({long_link_id: self.id})
+  # end
+
+  def destroy_short_links
+    ShortLink.find_by_long_link_id(id).destroy
   end
 
   private
