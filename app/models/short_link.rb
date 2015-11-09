@@ -9,7 +9,7 @@ class ShortLink < ActiveRecord::Base
   validates   :slug, length: {maximum: LENGTH, minimum: LENGTH}
   validates   :slug, presence: true, uniqueness: true
   validates   :long_link_id, presence: true, uniqueness: true
-  validate    :validate_by_slug_suffix
+  validate    :validate_slug_suffix
   validate    :validate_long_link
 
   before_validation :generate_slug!, if: :new_record?
@@ -33,16 +33,34 @@ class ShortLink < ActiveRecord::Base
     end 
   end
 
-  def validate_by_slug_suffix
+  def validate_slug_suffix
+    ShortLink.valid_slug?(slug)
+  end
+
+  def self.valid_slug?(slug)
+
     return false if slug.nil?
+
     slug_sum = 0
-    
     slug_chars = slug.split('')
     slug_suffix = slug_chars.pop
 
     slug_chars.each{|v| slug_sum += CHARACTERS[v.to_s]}
     
-    true if (slug_sum % CHARACTER_SET.length) == CHARACTERS[slug_suffix.to_s]  
+    true if (slug_sum % CHARACTER_SET.length) == CHARACTERS[slug_suffix.to_s]
+  end
+
+  def self.find_by_slug_assisted(slug)
+
+    # Return record id found without assistance
+    return self.find_by_slug(slug) if self.find_by_slug(slug).present?
+    
+    # TODO: build this example out and extract method
+    # Return record if assisted slug is valid and found
+    if valid_slug?(slug.sub("0", "O"))
+      return self.find_by_slug(slug.sub("0", "O")) if self.find_by_slug(slug.sub("0", "O")).present?
+    end
+
   end
 
 end

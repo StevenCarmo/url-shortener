@@ -28,9 +28,9 @@ describe ShortLink, :type => :model do
 
     it 'validates against last character' do
       subject.slug = 'aaaaaa'
-      expect(subject.validate_by_slug_suffix).to eq true
+      expect(subject.validate_slug_suffix).to eq true
       subject.slug = 'aaaaab'
-      expect(subject.validate_by_slug_suffix).not_to eq true
+      expect(subject.validate_slug_suffix).not_to eq true
     end
    
   end
