@@ -1,6 +1,11 @@
 # url-shortener
 #### Example: Not Production Ready
 
+## Using the example app
+Start rails server and open the below url in your browser
+
+http://localhost:3000/
+
 ----
 ## What is does?
 1. Given a long url it generates a short url (ShortLink)
@@ -48,5 +53,6 @@ The api endpoints are
 
 Both require a url parameter as below:
 
-1. http://localhost/api/expand?url=http://localhost/abbbbe
-2. http://localhost/api/shorten?url=http://www.intrenix.com
+1. http://localhost:3000/api/expand?url=http://localhost:3000/abbbbe
+2. http://localhost:3000/api/shorten?url=http://www.intrenix.com
+

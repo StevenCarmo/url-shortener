@@ -1,0 +1,112 @@
+<div class="container hidden-xs">
+  <div class="row">
+    <div class="col-md-offset-3 col-md-6">&nbsp;
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-offset-2 col-md-8">
+      <div class="text-center">
+        <div class="page-header">
+          <h3>Link Shortener <small>Paste URL below:</small></h3>
+        </div>
+      </div>
+      <!-- -->
+      <div class="input-group input-group-lg">
+        <input type="text" id="urlValue" class="form-control" placeholder="http://www.intrenix.com" data-bind='value: urlValue, valueUpdate: "afterkeydown"' />
+        <span class="input-group-btn" >
+          <button class="btn btn-default " data-bind="css: { 'btn-primary': formAction() == 'shorten', 'btn-success': formAction() != 'shorten' };" type="button" onclick="viewModel.runAction();">
+            <span data-bind="text: viewModel.submitText()"  style="text-transform: none;"> </span></button>
+        </span>
+      </div>
+      <!--  -->
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-offset-2 col-md-8">
+      <div class="text-center">
+        <div class="page-header">
+          <h3><small>Recent Shortened Urls:</small></h3>
+        </div>
+      </div>
+      <!--  -->
+      <div data-bind="foreach: recentLinks">
+        <div class="media">
+          <div class="media-left" style="font-size: 20px;">
+            <i class="media-object glyphicon glyphicon-file"></i>
+          </div>
+          <div class="media-body">
+            <h5 class="media-heading">
+              <a href="http://localhost:3000/aefew3" target="_blank"><span data-bind="text: $data['url']"> </span></a>
+            </h5>
+            <span data-bind="text: viewModel.localhost()"> </span>/<span data-bind="text: $data['slug']"> </span>
+          </div>
+        </div>
+      </div>
+      <!--  -->
+    </div>
+  </div>
+</div>
+
+<script>
+$( document ).ready(function() {
+  var myViewModel = function() {
+    var self = this;
+
+    self.localhost    = ko.observable('<%= "http://#{request.host}" %><%= ":#{request.port}" if request.port != 80 %>');
+    self.urlValue     = ko.observable('');
+    self.formAction   = ko.observable('shorten');
+    self.recentLinks  = ko.observableArray([]);
+
+    self.submitText = ko.computed(function() {
+        if (self.urlValue().indexOf(self.localhost()) >= 0 ) {
+          self.formAction('expand');
+        }
+        else {
+          self.formAction('shorten');
+        }
+        return self.formAction();
+    }, this);
+
+    self.runAction = function(){
+      if (self.formAction() == 'expand') {
+        self.expand();
+      }
+      else {
+        self.shorten();
+      }
+    };
+
+    self.shorten = function(){
+      if (self.urlValue().length >= 6) {
+        $.getJSON('/api/shorten?url=' + self.urlValue(), function(data) {
+            self.recentLinks.unshift(data['data']);
+            self.urlValue(self.localhost() + '/' + data['data']['slug']);
+        });
+      }
+    };
+
+    self.expand = function(){
+      if (self.urlValue().length >= 6) {
+        $.getJSON('/api/expand?url=' + self.urlValue(), function(data) {
+            self.recentLinks.unshift(data['data']);
+            self.urlValue(data['data']['url']);
+        });
+      }
+    };
+
+  };
+
+  viewModel = new myViewModel();
+  ko.applyBindings(viewModel);
+});
+</script>
+
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha256-Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc= sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
