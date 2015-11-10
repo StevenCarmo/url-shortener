@@ -1,6 +1,9 @@
-<div class="container hidden-xs">
+<div class="container" style="height: 80px;">
   <div class="row">
-    <div class="col-md-offset-3 col-md-6">&nbsp;
+    <div class="col-md-offset-1 col-md-10">
+      <div class="alert text-center" role="alert" data-bind="visible: message.status() != '', css:{ 'alert-success': viewModel.message.status() == 200, 'alert-warning': message.status() != 200 };">
+        <span data-bind="text: viewModel.message.text()"> </span> <span>&nbsp;</span>
+      </div>
     </div>
   </div>
 </div>
@@ -10,12 +13,12 @@
     <div class="col-md-offset-2 col-md-8">
       <div class="text-center">
         <div class="page-header">
-          <h3>Link Shortener <small>Paste URL below:</small></h3>
+          <h3>Link Shortener <small>Enter URL below:</small></h3>
         </div>
       </div>
       <!-- -->
       <div class="input-group input-group-lg">
-        <input type="text" id="urlValue" class="form-control" placeholder="http://www.intrenix.com" data-bind='value: urlValue, valueUpdate: "afterkeydown"' />
+        <input type="text" id="urlValue" class="form-control" placeholder="http://www.intrenix.com" onFocus="viewModel.resetMessage();" data-bind='value: urlValue, valueUpdate: "afterkeydown"' />
         <span class="input-group-btn" >
           <button class="btn btn-default " data-bind="css: { 'btn-primary': formAction() == 'shorten', 'btn-success': formAction() != 'shorten' };" type="button" onclick="viewModel.runAction();">
             <span data-bind="text: viewModel.submitText()"  style="text-transform: none;"> </span></button>
@@ -42,7 +45,7 @@
           </div>
           <div class="media-body">
             <h5 class="media-heading">
-              <a href="http://localhost:3000/aefew3" target="_blank"><span data-bind="text: $data['url']"> </span></a>
+              <strong data-bind="text: $data['url']"> </strong>
             </h5>
             <span data-bind="text: viewModel.localhost()"> </span>/<span data-bind="text: $data['slug']"> </span>
           </div>
@@ -63,6 +66,11 @@ $( document ).ready(function() {
     self.formAction   = ko.observable('shorten');
     self.recentLinks  = ko.observableArray([]);
 
+    self.message  = {
+      status: ko.observable(''),
+      text: ko.observable('')
+    }
+
     self.submitText = ko.computed(function() {
         if (self.urlValue().indexOf(self.localhost()) >= 0 ) {
           self.formAction('expand');
@@ -72,6 +80,11 @@ $( document ).ready(function() {
         }
         return self.formAction();
     }, this);
+
+    self.resetMessage = function(){
+      self.message.status('');
+      self.message.text('');
+    };
 
     self.runAction = function(){
       if (self.formAction() == 'expand') {
@@ -85,6 +98,9 @@ $( document ).ready(function() {
     self.shorten = function(){
       if (self.urlValue().length >= 6) {
         $.getJSON('/api/shorten?url=' + self.urlValue(), function(data) {
+            self.message.status(data.status);
+            self.message.text(data.message);
+
             if (data.status == 200) {
               self.recentLinks.unshift(data['data']);
               self.urlValue(self.localhost() + '/' + data['data']['slug']);
@@ -96,8 +112,11 @@ $( document ).ready(function() {
     self.expand = function(){
       if (self.urlValue().length >= 6) {
         $.getJSON('/api/expand?url=' + self.urlValue(), function(data) {
+            self.message.status(data.status);
+            self.message.text(data.message);
+
             if (data.status == 200) {
-              self.recentLinks.unshift(data['data']);
+              // self.recentLinks.unshift(data['data']);
               self.urlValue(data['data']['url']);
             }
         });

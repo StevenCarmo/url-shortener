@@ -5,6 +5,9 @@ class ShortLink < ActiveRecord::Base
   CHARACTERS = Hash[CHARACTER_SET.map.with_index { |x, i| [x, i] }]
   MISTYPED_CHARACTERS = ['o', '0'], ['O', '0'], ['0', 'O']
 
+  OFFENSIVE_WORDS = ['foo','bar']
+  OFFENSIVE_WORDS_TRIE = WordHash.build_trie(OFFENSIVE_WORDS)
+
   belongs_to  :long_link
   
   validates   :slug, length: {maximum: LENGTH, minimum: LENGTH}
@@ -38,11 +41,11 @@ class ShortLink < ActiveRecord::Base
   end
 
   def validate_slug_suffix
-    ShortLink.valid_slug?(slug)
+    return false if ShortLink.valid_slug?(slug) == false
+    return slug_is_clean?
   end
 
   def self.valid_slug?(slug=nil)
-
     return false if slug.nil?
 
     slug_sum = 0
@@ -52,11 +55,32 @@ class ShortLink < ActiveRecord::Base
     slug_chars.each{|v| slug_sum += CHARACTERS[v.to_s]}
     
     return true if (slug_sum % CHARACTER_SET.length) == CHARACTERS[slug_suffix.to_s]
+    return false 
+  end
+
+  def slug_is_clean?
+    slug = self.slug.downcase.split('')
+    res = true
+
+    while slug.length >= 1 && res == true
+      res = ShortLink.scan_slug(slug)
+      slug.shift
+    end
+
+    return res
+  end
+
+  def self.scan_slug(slug)
+    slug.each.inject(OFFENSIVE_WORDS_TRIE) do |h, key|
+      return false if h.has_key?('value') == true
+      return true if h.has_key?(key) == false && h.has_key?('value') == false
+      h[key]
+    end
+
+    return false
   end
 
   def self.find_by_slug_assisted(slug)
-
-
     # Return record id found without assistance
     return self.find_by_slug(slug) if self.find_by_slug(slug).present?
     
@@ -71,7 +95,6 @@ class ShortLink < ActiveRecord::Base
     end
 
     return self.find_by_slug(slug_variation) if slug_variation.nil? == false
-
   end
 
 end

@@ -2,7 +2,6 @@ require 'database_cleaner'
 require "rails_helper"
 
 describe ShortLink, :type => :model do
-  # subject {  }
   
   it "has a valid factory" do
     expect(build(:short_link)).to be_valid
@@ -31,6 +30,15 @@ describe ShortLink, :type => :model do
       expect(subject.validate_slug_suffix).to eq true
       subject.slug = 'aaaaab'
       expect(subject.validate_slug_suffix).not_to eq true
+    end
+   
+  end
+
+  describe "#slug_is_clean?" do
+    subject { build(:short_link, :slug => 'IfooUi') }
+
+    it 'validates slug against offensive words trie' do
+      expect(subject.slug_is_clean?).to eq false
     end
    
   end
