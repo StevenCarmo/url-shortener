@@ -3,6 +3,7 @@ class ShortLink < ActiveRecord::Base
   LENGTH = 6
   CHARACTER_SET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
   CHARACTERS = Hash[CHARACTER_SET.map.with_index { |x, i| [x, i] }]
+  MISTYPED_CHARACTERS = ['o', '0'], ['O', '0'], ['0', 'O']
 
   belongs_to  :long_link
   
@@ -12,7 +13,10 @@ class ShortLink < ActiveRecord::Base
   validate    :validate_slug_suffix
   validate    :validate_long_link
 
-  before_validation :generate_slug!, if: :new_record?
+  # before_validation :generate_slug!, if: :slug.length
+  before_validation  do
+    generate_slug! if self.slug.nil?
+  end
 
   def generate_slug!
     self.slug = ''
@@ -37,7 +41,7 @@ class ShortLink < ActiveRecord::Base
     ShortLink.valid_slug?(slug)
   end
 
-  def self.valid_slug?(slug)
+  def self.valid_slug?(slug=nil)
 
     return false if slug.nil?
 
@@ -47,19 +51,26 @@ class ShortLink < ActiveRecord::Base
 
     slug_chars.each{|v| slug_sum += CHARACTERS[v.to_s]}
     
-    true if (slug_sum % CHARACTER_SET.length) == CHARACTERS[slug_suffix.to_s]
+    return true if (slug_sum % CHARACTER_SET.length) == CHARACTERS[slug_suffix.to_s]
   end
 
   def self.find_by_slug_assisted(slug)
 
+
     # Return record id found without assistance
     return self.find_by_slug(slug) if self.find_by_slug(slug).present?
     
-    # TODO: build this example out and extract method
     # Return record if assisted slug is valid and found
-    if valid_slug?(slug.sub("0", "O"))
-      return self.find_by_slug(slug.sub("0", "O")) if self.find_by_slug(slug.sub("0", "O")).present?
+    slug_variation = nil
+
+    MISTYPED_CHARACTERS.each do |mistake|
+      if slug_variation.nil? && slug.include?(mistake[0].to_s)
+        temp_slug = slug.sub(mistake[0].to_s, mistake[1].to_s)
+        slug_variation = temp_slug if self.valid_slug?(temp_slug)
+      end
     end
+
+    return self.find_by_slug(slug_variation) if slug_variation.nil? == false
 
   end
 

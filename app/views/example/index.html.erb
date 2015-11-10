@@ -85,8 +85,10 @@ $( document ).ready(function() {
     self.shorten = function(){
       if (self.urlValue().length >= 6) {
         $.getJSON('/api/shorten?url=' + self.urlValue(), function(data) {
-            self.recentLinks.unshift(data['data']);
-            self.urlValue(self.localhost() + '/' + data['data']['slug']);
+            if (data.status == 200) {
+              self.recentLinks.unshift(data['data']);
+              self.urlValue(self.localhost() + '/' + data['data']['slug']);
+            }
         });
       }
     };
@@ -94,12 +96,13 @@ $( document ).ready(function() {
     self.expand = function(){
       if (self.urlValue().length >= 6) {
         $.getJSON('/api/expand?url=' + self.urlValue(), function(data) {
-            self.recentLinks.unshift(data['data']);
-            self.urlValue(data['data']['url']);
+            if (data.status == 200) {
+              self.recentLinks.unshift(data['data']);
+              self.urlValue(data['data']['url']);
+            }
         });
       }
     };
-
   };
 
   viewModel = new myViewModel();
